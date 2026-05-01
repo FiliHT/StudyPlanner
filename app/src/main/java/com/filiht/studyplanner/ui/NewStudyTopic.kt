@@ -1,5 +1,6 @@
 package com.filiht.studyplanner.ui
 
+import android.R.color.white
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,9 +8,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.filiht.studyplanner.model.Subject
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,11 +34,15 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewStudySessionModal(
+    subjects: List<Subject>,
     onDismiss: () -> Unit,
-    onAdd: (subject: String, topic: String, time: String) -> Unit
+    onAdd: (subjectId: Int, topic: String, time: String) -> Unit,
+    onAddSubject: (String) -> Unit
 ) {
-    var selectedSubject by remember { mutableStateOf("") }
+    var selectedSubjectId by remember { mutableIntStateOf(-1) }
     var topicName by remember { mutableStateOf("") }
+    var showAddSubjectDialog by remember { mutableStateOf(false) }
+    var newSubjectName by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -49,25 +57,19 @@ fun NewStudySessionModal(
         return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(cal.time)
     }
 
-    // Use derivedStateOf to ensure the state reads are correctly tracked and warnings are resolved
     val timeDisplayStr by remember {
         derivedStateOf {
             formatTime(selectedHour, selectedMinute)
         }
     }
 
-    val subjects = listOf("Maths", "Science", "English", "History", "Database")
-
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            // Fix: Moved the "Create Session" button to the confirmButton slot.
-            // This is more idiomatic for AlertDialog and avoids potential layout issues
-            // with AlertDialogFlowRow when buttons are empty or non-measurable.
             Button(
                 onClick = {
-                    if (selectedSubject.isNotBlank() && topicName.isNotBlank()) {
-                        onAdd(selectedSubject, topicName, timeDisplayStr)
+                    if (selectedSubjectId != -1 && topicName.isNotBlank()) {
+                        onAdd(selectedSubjectId, topicName, timeDisplayStr)
                     }
                 },
                 modifier = Modifier
@@ -79,7 +81,7 @@ fun NewStudySessionModal(
                 Text("Add Topic", fontWeight = FontWeight.Bold, color = Color.White)
             }
         },
-        dismissButton = null, // Fix: Use null instead of an empty lambda to avoid layout issues in the button row
+        dismissButton = null,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp),
@@ -114,14 +116,15 @@ fun NewStudySessionModal(
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 8.dp)
+                    contentPadding = PaddingValues(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     items(subjects) { subject ->
-                        val isSelected = selectedSubject == subject
+                        val isSelected = selectedSubjectId == subject.id
                         FilterChip(
                             selected = isSelected,
-                            onClick = { selectedSubject = subject },
-                            label = { Text(subject) },
+                            onClick = { selectedSubjectId = subject.id },
+                            label = { Text(subject.name) },
                             shape = RoundedCornerShape(12.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 labelColor = Color.Gray,
@@ -137,6 +140,20 @@ fun NewStudySessionModal(
                                 selectedBorderWidth = 0.dp
                             )
                         )
+                    }
+                    item {
+                        IconButton(
+                            onClick = { showAddSubjectDialog = true },
+                            modifier = Modifier
+                                .size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Subject",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 
@@ -181,8 +198,6 @@ fun NewStudySessionModal(
                         .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
                         .border(1.dp, Color(0xFFF0F0F0), RoundedCornerShape(12.dp))
                         .clickable {
-                            // Fix: Instantiate and show TimePickerDialog only when clicked.
-                            // This avoids potential issues with non-Compose dialogs during rendering.
                             TimePickerDialog(
                                 context,
                                 { _, hour: Int, minute: Int ->
@@ -215,6 +230,44 @@ fun NewStudySessionModal(
             }
         }
     )
+
+    if (showAddSubjectDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddSubjectDialog = false },
+            title = { Text("New Subject", color = Color.Black) },
+            containerColor = Color.White,
+            text = {
+                OutlinedTextField(
+                    value = newSubjectName,
+                    onValueChange = { newSubjectName = it },
+                   // label = { Text("Subject Name" , color = Color.Black) },
+                    placeholder = { Text("e.g. Maths", color = Color.LightGray) },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        focusedBorderColor = Color(0xFF5D5FEF)),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newSubjectName.isNotBlank()) {
+                            onAddSubject(newSubjectName)
+                            newSubjectName = ""
+                            showAddSubjectDialog = false
+                        }
+                    }
+                ) {
+                    Text("Add" , color = Color.Black )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddSubjectDialog = false }) {
+                    Text("Cancel" , color = Color.Black )
+                }
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -222,8 +275,13 @@ fun NewStudySessionModal(
 fun NewStudySessionModalPreview() {
     StudyPlannerTheme {
         NewStudySessionModal(
+            subjects = listOf(
+                Subject(1, "Maths"),
+                Subject(2, "Science")
+            ),
             onDismiss = {},
-            onAdd = { _, _, _ -> }
+            onAdd = { _, _, _ -> },
+            onAddSubject = {}
         )
     }
 }

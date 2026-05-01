@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.filiht.studyplanner.db.StudyDataManager
 import com.filiht.studyplanner.model.StudyTask
+import com.filiht.studyplanner.model.Subject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,9 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
 
     private val _tasks = MutableStateFlow<List<StudyTask>>(emptyList())
     val tasks: StateFlow<List<StudyTask>> = _tasks.asStateFlow()
+
+    private val _subjects = MutableStateFlow<List<Subject>>(emptyList())
+    val subjects: StateFlow<List<Subject>> = _subjects.asStateFlow()
 
     private val _selectedDay = MutableStateFlow("Monday")
     val selectedDay: StateFlow<String> = _selectedDay.asStateFlow()
@@ -40,7 +44,33 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
 
     init {
         loadTasksForDay(_selectedDay.value)
+        loadSubjects()
         refreshStats(_selectedDay.value)
+    }
+
+    private fun loadSubjects() {
+        viewModelScope.launch {
+            dataManager.getAllSubjects().collect {
+                _subjects.value = it
+            }
+        }
+    }
+
+    fun addSubject(name: String) {
+        viewModelScope.launch {
+            dataManager.addSubject(name)
+            loadSubjects()
+        }
+    }
+
+    fun deleteSubject(subjectId: Int) {
+        viewModelScope.launch {
+            dataManager.deleteSubject(subjectId)
+            loadSubjects()
+            // Reload tasks in case some were deleted
+            loadTasksForDay(_selectedDay.value)
+            refreshStats(_selectedDay.value)
+        }
     }
 
     fun selectDay(day: String) {

@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.filiht.studyplanner.model.StudyTask
+import com.filiht.studyplanner.model.Subject
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,38 +40,43 @@ fun ScheduleScreen(
     onTaskClick: (StudyTask) -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState()
+    val subjects by viewModel.subjects.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
 
     ScheduleScreenContent(
         tasks = tasks,
+        subjects = subjects,
         selectedDay = selectedDay,
         onTaskClick = onTaskClick,
         onDaySelected = { viewModel.selectDay(it) },
         onDeleteTask = { viewModel.removeTask(it) },
         onCompleteTask = { viewModel.completeTask(it) },
-        onAddTask = { subject, topic, time ->
+        onAddTask = { subjectId, topic, time ->
             viewModel.addTask(
                 StudyTask(
-                    subject = subject,
+                    subjectId = subjectId,
                     topic = topic,
                     time = time,
                     day = selectedDay,
                     isCompleted = false
                 )
             )
-        }
+        },
+        onAddSubject = { viewModel.addSubject(it) }
     )
 }
 
 @Composable
 fun ScheduleScreenContent(
     tasks: List<StudyTask>,
+    subjects: List<Subject>,
     selectedDay: String,
     onTaskClick: (StudyTask) -> Unit,
     onDaySelected: (String) -> Unit,
     onDeleteTask: (Int) -> Unit,
     onCompleteTask: (StudyTask) -> Unit,
-    onAddTask: (String, String, String) -> Unit
+    onAddTask: (Int, String, String) -> Unit,
+    onAddSubject: (String) -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -93,7 +99,6 @@ fun ScheduleScreenContent(
                         fontWeight = FontWeight.Bold
                     )
                 }
-//
             }
         }
     ) { padding ->
@@ -132,11 +137,13 @@ fun ScheduleScreenContent(
 
     if (showAddDialog) {
         NewStudySessionModal(
+            subjects = subjects,
             onDismiss = { showAddDialog = false },
-            onAdd = { subject, topic, time ->
-                onAddTask(subject, topic, time)
+            onAdd = { subjectId, topic, time ->
+                onAddTask(subjectId, topic, time)
                 showAddDialog = false
-            }
+            },
+            onAddSubject = onAddSubject
         )
     }
 }
@@ -194,7 +201,7 @@ fun StyledTaskCard(
                     modifier = Modifier.alpha(contentAlpha)
                 ) {
                     Text(
-                        task.subject.uppercase(),
+                        task.subjectName.uppercase(),
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
                         color = Color(0xFF5D5FEF),
@@ -345,19 +352,21 @@ fun AddSessionButton(onClick: () -> Unit) {
 @Composable
 fun ScheduleScreenPreview() {
     val sampleTasks = listOf(
-        StudyTask(1, "Maths", "Calculus Basics", "09:00 AM", "Monday", false),
-        StudyTask(2, "Science", "Physics - Forces", "11:00 AM", "Monday", true),
-        StudyTask(3, "English", "Grammar", "02:00 PM", "Monday", false)
+        StudyTask(1, 1, "Maths", "Calculus Basics", "09:00 AM", "Monday", false),
+        StudyTask(2, 2, "Science", "Physics - Forces", "11:00 AM", "Monday", true),
+        StudyTask(3, 3, "English", "Grammar", "02:00 PM", "Monday", false)
     )
     StudyPlannerTheme {
         ScheduleScreenContent(
             tasks = sampleTasks,
+            subjects = listOf(Subject(1, "Maths"), Subject(2, "Science")),
             selectedDay = "Monday",
             onTaskClick = {},
             onDaySelected = {},
             onDeleteTask = {},
             onCompleteTask = {},
-            onAddTask = { _, _, _ -> }
+            onAddTask = { _, _, _ -> },
+            onAddSubject = {}
         )
     }
 }
