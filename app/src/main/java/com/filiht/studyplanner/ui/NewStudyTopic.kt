@@ -1,6 +1,5 @@
 package com.filiht.studyplanner.ui
 
-import android.R.color.white
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -26,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.filiht.studyplanner.R
 import com.filiht.studyplanner.model.Subject
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
 import java.text.SimpleDateFormat
@@ -37,12 +36,13 @@ fun NewStudySessionModal(
     subjects: List<Subject>,
     onDismiss: () -> Unit,
     onAdd: (subjectId: Int, topic: String, time: String) -> Unit,
-    onAddSubject: (String) -> Unit
+    onAddSubject: (String) -> Unit,
+    onDeleteSubject: (Int) -> Unit
 ) {
     var selectedSubjectId by remember { mutableIntStateOf(-1) }
     var topicName by remember { mutableStateOf("") }
-    var showAddSubjectDialog by remember { mutableStateOf(false) }
-    var newSubjectName by remember { mutableStateOf("") }
+    val showAddSubjectDialog = remember { mutableStateOf(false) }
+    val newSubjectName = remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -125,11 +125,22 @@ fun NewStudySessionModal(
                             selected = isSelected,
                             onClick = { selectedSubjectId = subject.id },
                             label = { Text(subject.name) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Remove Subject",
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clickable { onDeleteSubject(subject.id) }
+                                )
+                            },
                             shape = RoundedCornerShape(12.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 labelColor = Color.Gray,
                                 selectedContainerColor = Color(0xFFE8EAF6),
-                                selectedLabelColor = Color(0xFF5D5FEF)
+                                selectedLabelColor = Color(0xFF5D5FEF),
+                                iconColor = Color.Gray,
+                                selectedTrailingIconColor = Color(0xFF5D5FEF)
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled = true,
@@ -143,7 +154,7 @@ fun NewStudySessionModal(
                     }
                     item {
                         IconButton(
-                            onClick = { showAddSubjectDialog = true },
+                            onClick = { showAddSubjectDialog.value = true },
                             modifier = Modifier
                                 .size(32.dp)
                         ) {
@@ -200,6 +211,7 @@ fun NewStudySessionModal(
                         .clickable {
                             TimePickerDialog(
                                 context,
+                                R.style.TimePickerTheme,
                                 { _, hour: Int, minute: Int ->
                                     selectedHour = hour
                                     selectedMinute = minute
@@ -231,15 +243,15 @@ fun NewStudySessionModal(
         }
     )
 
-    if (showAddSubjectDialog) {
+    if (showAddSubjectDialog.value) {
         AlertDialog(
-            onDismissRequest = { showAddSubjectDialog = false },
+            onDismissRequest = { showAddSubjectDialog.value = false },
             title = { Text("New Subject", color = Color.Black) },
             containerColor = Color.White,
             text = {
                 OutlinedTextField(
-                    value = newSubjectName,
-                    onValueChange = { newSubjectName = it },
+                    value = newSubjectName.value,
+                    onValueChange = { newSubjectName.value = it },
                    // label = { Text("Subject Name" , color = Color.Black) },
                     placeholder = { Text("e.g. Maths", color = Color.LightGray) },
                     singleLine = true,
@@ -251,10 +263,10 @@ fun NewStudySessionModal(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (newSubjectName.isNotBlank()) {
-                            onAddSubject(newSubjectName)
-                            newSubjectName = ""
-                            showAddSubjectDialog = false
+                        if (newSubjectName.value.isNotBlank()) {
+                            onAddSubject(newSubjectName.value)
+                            newSubjectName.value = ""
+                            showAddSubjectDialog.value = false
                         }
                     }
                 ) {
@@ -262,7 +274,7 @@ fun NewStudySessionModal(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAddSubjectDialog = false }) {
+                TextButton(onClick = { showAddSubjectDialog.value = false }) {
                     Text("Cancel" , color = Color.Black )
                 }
             }
@@ -281,7 +293,8 @@ fun NewStudySessionModalPreview() {
             ),
             onDismiss = {},
             onAdd = { _, _, _ -> },
-            onAddSubject = {}
+            onAddSubject = {},
+            onDeleteSubject = {}
         )
     }
 }

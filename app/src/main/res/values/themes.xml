@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.StudyPlanner" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="TimePickerTheme" parent="android:Theme.Material.Light.Dialog">
+        <item name="android:colorAccent">#5D5FEF</item>
+    </style>
 </resources>

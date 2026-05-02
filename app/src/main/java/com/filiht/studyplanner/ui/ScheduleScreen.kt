@@ -62,7 +62,8 @@ fun ScheduleScreen(
                 )
             )
         },
-        onAddSubject = { viewModel.addSubject(it) }
+        onAddSubject = { viewModel.addSubject(it) },
+        onDeleteSubject = { viewModel.deleteSubject(it) }
     )
 }
 
@@ -76,7 +77,8 @@ fun ScheduleScreenContent(
     onDeleteTask: (Int) -> Unit,
     onCompleteTask: (StudyTask) -> Unit,
     onAddTask: (Int, String, String) -> Unit,
-    onAddSubject: (String) -> Unit
+    onAddSubject: (String) -> Unit,
+    onDeleteSubject: (Int) -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -143,7 +145,8 @@ fun ScheduleScreenContent(
                 onAddTask(subjectId, topic, time)
                 showAddDialog = false
             },
-            onAddSubject = onAddSubject
+            onAddSubject = onAddSubject,
+            onDeleteSubject = onDeleteSubject
         )
     }
 }
@@ -366,7 +369,8 @@ fun ScheduleScreenPreview() {
             onDeleteTask = {},
             onCompleteTask = {},
             onAddTask = { _, _, _ -> },
-            onAddSubject = {}
+            onAddSubject = {},
+            onDeleteSubject = {}
         )
     }
 }
