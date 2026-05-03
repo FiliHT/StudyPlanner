@@ -1,5 +1,10 @@
 package com.filiht.studyplanner.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,13 +29,16 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.filiht.studyplanner.model.StudyTask
 import com.filiht.studyplanner.model.Subject
+import com.filiht.studyplanner.notification.StudyAlarmScheduler
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,9 +47,30 @@ fun ScheduleScreen(
     viewModel: StudyViewModel,
     onTaskClick: (StudyTask) -> Unit
 ) {
+    val context = LocalContext.current
     val tasks by viewModel.tasks.collectAsState()
     val subjects by viewModel.subjects.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
+
+    val alarmScheduler = remember { StudyAlarmScheduler(context) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Handle permission result if needed
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     ScheduleScreenContent(
         tasks = tasks,
@@ -49,18 +78,25 @@ fun ScheduleScreen(
         selectedDay = selectedDay,
         onTaskClick = onTaskClick,
         onDaySelected = { viewModel.selectDay(it) },
-        onDeleteTask = { viewModel.removeTask(it) },
+        onDeleteTask = { taskId ->
+            alarmScheduler.cancel(taskId)
+            viewModel.removeTask(taskId)
+        },
         onCompleteTask = { viewModel.completeTask(it) },
         onAddTask = { subjectId, topic, time ->
+            val subjectName = subjects.find { it.id == subjectId }?.name ?: ""
             viewModel.addTask(
                 StudyTask(
                     subjectId = subjectId,
+                    subjectName = subjectName,
                     topic = topic,
                     time = time,
                     day = selectedDay,
                     isCompleted = false
                 )
-            )
+            ) { savedTask ->
+                alarmScheduler.schedule(savedTask)
+            }
         },
         onAddSubject = { viewModel.addSubject(it) },
         onDeleteSubject = { viewModel.deleteSubject(it) }

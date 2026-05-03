@@ -60,7 +60,7 @@ class StudyDataManager(private val dbHelper: DatabaseHelper) {
         return result
     }
 
-    fun addTask(task: StudyTask) {
+    fun addTask(task: StudyTask): Long {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
             put(DatabaseHelper.COLUMN_SUBJECT_ID, task.subjectId)
@@ -69,8 +69,9 @@ class StudyDataManager(private val dbHelper: DatabaseHelper) {
             put(DatabaseHelper.COLUMN_DAY, task.day)
             put(DatabaseHelper.COLUMN_COMPLETED, if (task.isCompleted) 1 else 0)
         }
-        db.insert(DatabaseHelper.TABLE_TASKS, null, values)
+        val id = db.insert(DatabaseHelper.TABLE_TASKS, null, values)
         db.close()
+        return id
     }
 
     fun updateTask(task: StudyTask) {

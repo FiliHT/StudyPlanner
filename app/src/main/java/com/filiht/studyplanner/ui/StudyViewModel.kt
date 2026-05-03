@@ -85,13 +85,15 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
         }
     }
 
-    fun addTask(task: StudyTask) {
+    fun addTask(task: StudyTask, onTaskAdded: (StudyTask) -> Unit = {}) {
         viewModelScope.launch {
-            dataManager.addTask(task)
+            val id = dataManager.addTask(task)
+            val savedTask = task.copy(id = id.toInt())
             if (task.day == _selectedDay.value) {
                 loadTasksForDay(task.day)
                 refreshStats(task.day)
             }
+            onTaskAdded(savedTask)
         }
     }
 
