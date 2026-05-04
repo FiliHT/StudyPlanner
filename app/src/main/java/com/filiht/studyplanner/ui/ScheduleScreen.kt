@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,11 +42,11 @@ import com.filiht.studyplanner.model.Subject
 import com.filiht.studyplanner.notification.StudyAlarmScheduler
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
     viewModel: StudyViewModel,
-    onTaskClick: (StudyTask) -> Unit
+    onTaskClick: (StudyTask) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val context = LocalContext.current
     val tasks by viewModel.tasks.collectAsState()
@@ -56,9 +57,7 @@ fun ScheduleScreen(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // Handle permission result if needed
-    }
+    ) { }
 
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -77,6 +76,7 @@ fun ScheduleScreen(
         subjects = subjects,
         selectedDay = selectedDay,
         onTaskClick = onTaskClick,
+        onSettingsClick = onSettingsClick,
         onDaySelected = { viewModel.selectDay(it) },
         onDeleteTask = { taskId ->
             alarmScheduler.cancel(taskId)
@@ -109,6 +109,7 @@ fun ScheduleScreenContent(
     subjects: List<Subject>,
     selectedDay: String,
     onTaskClick: (StudyTask) -> Unit,
+    onSettingsClick: () -> Unit,
     onDaySelected: (String) -> Unit,
     onDeleteTask: (Int) -> Unit,
     onCompleteTask: (StudyTask) -> Unit,
@@ -123,12 +124,13 @@ fun ScheduleScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF5D5FEF))
+                    .background(MaterialTheme.colorScheme.primary)
                     .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = "Study Planner",
@@ -136,15 +138,26 @@ fun ScheduleScreenContent(
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
+                    
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
             }
-        }
+
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FE))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             DaySelector(
@@ -208,7 +221,7 @@ fun StyledTaskCard(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(enabled = !task.isCompleted) { onTaskClick() },
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
@@ -219,23 +232,28 @@ fun StyledTaskCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.alpha(contentAlpha)
             ) {
-                Icon(Icons.Outlined.Schedule, null, tint = Color(0xFF9EA3AE), modifier = Modifier.size(24.dp))
+                Icon(
+                    Icons.Outlined.Schedule, 
+                    null, 
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant, 
+                    modifier = Modifier.size(24.dp)
+                )
                 Text(
                     task.time, 
                     style = MaterialTheme.typography.labelLarge, 
-                    color = Color(0xFF9EA3AE), 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, 
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
-            Box(modifier = Modifier.width(1.dp).height(48.dp).background(Color(0xFFF0F0F0)))
+            Box(modifier = Modifier.width(1.dp).height(48.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)))
             Spacer(modifier = Modifier.width(16.dp))
 
             // Info Section
             Column(modifier = Modifier.weight(1f)) {
                 Surface(
-                    color = Color(0xFFF0F2FF), 
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), 
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.alpha(contentAlpha)
                 ) {
@@ -243,7 +261,7 @@ fun StyledTaskCard(
                         task.subjectName.uppercase(),
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                        color = Color(0xFF5D5FEF),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
@@ -254,7 +272,7 @@ fun StyledTaskCard(
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     ), 
                     fontWeight = FontWeight.ExtraBold, 
-                    color = if (task.isCompleted) Color.Gray else Color(0xFF1A1C1E),
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(vertical = 4.dp).alpha(contentAlpha)
                 )
 
@@ -265,19 +283,19 @@ fun StyledTaskCard(
                     Icon(
                         imageVector = if(task.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                         contentDescription = null,
-                        tint = if(task.isCompleted) Color(0xFF00A389) else Color(0xFF9EA3AE),
+                        tint = if(task.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = if(task.isCompleted) " Completed" else " Pending",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if(task.isCompleted) Color(0xFF00A389) else Color(0xFF9EA3AE),
+                        color = if(task.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // Actions Section - Vertical Column as per image
+            // Actions Section
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -287,14 +305,14 @@ fun StyledTaskCard(
                     onClick = onToggleComplete,
                     interactionSource = completeInteractionSource,
                     shape = CircleShape,
-                    color = if (isCompletePressed || task.isCompleted) Color(0xFFE6F6F3) else Color(0xFFF5F7FA),
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Complete",
-                            tint = if (task.isCompleted) Color(0xFF00A389) else Color(0xFF9EA3AE),
+                            tint = if (task.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -305,14 +323,14 @@ fun StyledTaskCard(
                     onClick = onDelete,
                     interactionSource = deleteInteractionSource,
                     shape = CircleShape,
-                    color = if (isDeletePressed) Color(0xFFFFEBEE) else Color(0xFFF5F7FA),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
                             contentDescription = "Delete",
-                            tint = if (isDeletePressed) Color.Red else Color(0xFF9EA3AE),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -343,19 +361,19 @@ fun DaySelector(selectedDay: String, onDaySelected: (String) -> Unit) {
         days.forEach { (fullName, initial) ->
             val isSelected = selectedDay == fullName
             Surface(
-                color = if (isSelected) Color(0xFF5D5FEF) else Color.White,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .size(45.dp)
                     .clickable { onDaySelected(fullName) }
-                    .then(if (!isSelected) Modifier.border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp)) else Modifier)
+                    .then(if (!isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), RoundedCornerShape(16.dp)) else Modifier)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = initial,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else Color.Gray,
-                        fontSize = 16.sp
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 18.sp
                     )
                 }
             }
@@ -365,6 +383,7 @@ fun DaySelector(selectedDay: String, onDaySelected: (String) -> Unit) {
 
 @Composable
 fun AddSessionButton(onClick: () -> Unit) {
+    val strokeColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -372,7 +391,7 @@ fun AddSessionButton(onClick: () -> Unit) {
             .height(100.dp)
             .drawBehind {
                 drawRoundRect(
-                    color = Color.LightGray,
+                    color = strokeColor,
                     style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)),
                     cornerRadius = CornerRadius(24.dp.toPx())
                 )
@@ -381,8 +400,8 @@ fun AddSessionButton(onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = Color.LightGray)
-            Text("ADD SESSION", color = Color.LightGray, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("ADD TOPIC", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -390,17 +409,24 @@ fun AddSessionButton(onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun ScheduleScreenPreview() {
+    val sampleSubjects = listOf(
+        Subject(1, "Maths"),
+        Subject(2, "Science"),
+        Subject(3, "History")
+    )
     val sampleTasks = listOf(
         StudyTask(1, 1, "Maths", "Calculus Basics", "09:00 AM", "Monday", false),
-        StudyTask(2, 2, "Science", "Physics - Forces", "11:00 AM", "Monday", true),
-        StudyTask(3, 3, "English", "Grammar", "02:00 PM", "Monday", false)
+        StudyTask(2, 2, "Science", "Physics: Quantum Mechanics", "11:00 AM", "Monday", true),
+        StudyTask(3, 3, "History", "The French Revolution", "02:00 PM", "Monday", false)
     )
+
     StudyPlannerTheme {
         ScheduleScreenContent(
             tasks = sampleTasks,
-            subjects = listOf(Subject(1, "Maths"), Subject(2, "Science")),
+            subjects = sampleSubjects,
             selectedDay = "Monday",
             onTaskClick = {},
+            onSettingsClick = {},
             onDaySelected = {},
             onDeleteTask = {},
             onCompleteTask = {},

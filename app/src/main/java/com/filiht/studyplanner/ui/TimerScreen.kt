@@ -74,13 +74,14 @@ fun TimerScreenContent(
     onSaveSettings: (Long, Long) -> Unit
 ) {
     var showSettings by remember { mutableStateOf(false) }
-    val primaryColor = if (isFocusMode) Color(0xFF5D5FEF) else Color(0xFF00A389)
-    val backgroundColor = if (isFocusMode) Color(0xFFF5F7FF) else Color(0xFFF0FAF8)
+    val primaryColor = if (isFocusMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
+    val badgeBackgroundColor = primaryColor.copy(alpha = 0.15f)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -96,14 +97,14 @@ fun TimerScreenContent(
                 onClick = onBack,
                 modifier = Modifier
                     .size(48.dp)
-                    .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(12.dp))
+                    .border(0.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.DarkGray)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
             }
 
             // Mode Switcher
             Surface(
-                color = Color(0xFFF5F5F5),
+                color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.height(44.dp)
             ) {
@@ -114,13 +115,13 @@ fun TimerScreenContent(
                     ModeButton(
                         text = "FOCUS",
                         isSelected = isFocusMode,
-                        activeColor = Color(0xFF5D5FEF),
+                        activeColor = MaterialTheme.colorScheme.primary,
                         onClick = { onToggleMode(true) }
                     )
                     ModeButton(
                         text = "BREAK",
                         isSelected = !isFocusMode,
-                        activeColor = Color(0xFF00A389),
+                        activeColor = MaterialTheme.colorScheme.secondary,
                         onClick = { onToggleMode(false) }
                     )
                 }
@@ -130,7 +131,7 @@ fun TimerScreenContent(
                 onClick = { showSettings = true },
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(Icons.Default.Tune, contentDescription = "Settings", tint = Color.Gray)
+                Icon(Icons.Default.Tune, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -138,7 +139,7 @@ fun TimerScreenContent(
 
         // Badge
         Surface(
-            color = backgroundColor,
+            color = badgeBackgroundColor,
             shape = RoundedCornerShape(20.dp)
         ) {
             Row(
@@ -168,7 +169,7 @@ fun TimerScreenContent(
             text = if (isFocusMode) (task?.topic ?: "Focus Session") else "Short Break",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF1A1C1E)
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -192,7 +193,7 @@ fun TimerScreenContent(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 14.dp.toPx()
                 drawCircle(
-                    color = Color(0xFFE8EAF6).copy(alpha = 0.5f),
+                    color = outlineVariant.copy(alpha = 0.5f),
                     style = Stroke(width = strokeWidth)
                 )
                 
@@ -212,7 +213,7 @@ fun TimerScreenContent(
                     fontWeight = FontWeight.Black,
                     letterSpacing = (-2).sp
                 ),
-                color = Color(0xFF1A1C1E)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -228,9 +229,9 @@ fun TimerScreenContent(
                 onClick = onReset,
                 modifier = Modifier
                     .size(60.dp)
-                    .border(1.dp, Color(0xFFEEEEEE), CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             ) {
-                Icon(Icons.Default.Refresh, null, tint = Color.DarkGray, modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(28.dp))
             }
 
             FilledIconButton(
@@ -250,12 +251,12 @@ fun TimerScreenContent(
                 onClick = onFinish,
                 modifier = Modifier
                     .size(60.dp)
-                    .border(1.dp, Color(0xFFEEEEEE), CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Check, 
                     contentDescription = "Complete Session", 
-                    tint = if (task?.isCompleted == true) Color(0xFF4CAF50) else Color.DarkGray, 
+                    tint = if (task?.isCompleted == true) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface, 
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -287,7 +288,7 @@ fun ModeButton(
             .fillMaxHeight()
             .width(90.dp)
             .background(
-                if (isSelected) Color.White else Color.Transparent,
+                if (isSelected) MaterialTheme.colorScheme.background else Color.Transparent,
                 RoundedCornerShape(11.dp)
             )
             .clickable { onClick() },
@@ -297,7 +298,7 @@ fun ModeButton(
             text = text,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            color = if (isSelected) activeColor else Color(0xFF9EA3AE)
+            color = if (isSelected) activeColor else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -310,8 +311,8 @@ fun TimerSettingsDialog(
     onDismiss: () -> Unit,
     onSave: (Long, Long) -> Unit
 ) {
-    var focusValue by remember { mutableFloatStateOf(initialFocus.toFloat()) }
-    var breakValue by remember { mutableFloatStateOf(initialBreak.toFloat()) }
+    var focusValue by remember { mutableStateOf(initialFocus.toFloat()) }
+    var breakValue by remember { mutableStateOf(initialBreak.toFloat()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -322,7 +323,7 @@ fun TimerSettingsDialog(
                 .padding(24.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(32.dp),
-            color = Color.White
+            color = MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier.padding(28.dp),
@@ -333,9 +334,9 @@ fun TimerSettingsDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Timer Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1A1C1E))
-                    IconButton(onClick = onDismiss, modifier = Modifier.background(Color(0xFFF5F5F5), CircleShape).size(36.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                    Text("Timer Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+                    IconButton(onClick = onDismiss, modifier = Modifier.background(MaterialTheme.colorScheme.outlineVariant, CircleShape).size(36.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -343,14 +344,14 @@ fun TimerSettingsDialog(
 
                 Column {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("FOCUS DURATION", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9EA3AE))
-                        Text("${focusValue.toInt()}m", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5D5FEF))
+                        Text("FOCUS DURATION", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${focusValue.toInt()}m", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     }
                     Slider(
                         value = focusValue,
                         onValueChange = { focusValue = it },
                         valueRange = 1f..60f,
-                        colors = SliderDefaults.colors(thumbColor = Color(0xFF5D5FEF), activeTrackColor = Color(0xFF5D5FEF), inactiveTrackColor = Color(0xFFEEEEEE))
+                        colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary, inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant)
                     )
                 }
 
@@ -358,14 +359,14 @@ fun TimerSettingsDialog(
 
                 Column {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("BREAK DURATION", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9EA3AE))
-                        Text("${breakValue.toInt()}m", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00A389))
+                        Text("BREAK DURATION", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${breakValue.toInt()}m", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                     }
                     Slider(
                         value = breakValue,
                         onValueChange = { breakValue = it },
                         valueRange = 1f..30f,
-                        colors = SliderDefaults.colors(thumbColor = Color(0xFF00A389), activeTrackColor = Color(0xFF00A389), inactiveTrackColor = Color(0xFFEEEEEE))
+                        colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.secondary, activeTrackColor = MaterialTheme.colorScheme.secondary, inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant)
                     )
                 }
 
@@ -375,11 +376,47 @@ fun TimerSettingsDialog(
                     onClick = { onSave(focusValue.toLong(), breakValue.toLong()) },
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D5FEF))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Save Changes", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = Color.White)
+                    Text("Save Changes", fontWeight = FontWeight.Bold, fontSize = 17.sp, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TimerScreenPreview() {
+    val sampleTask = StudyTask(
+        id = 1,
+        subjectId = 1,
+        subjectName = "Mathematics",
+        topic = "Calculus Basics",
+        time = "09:00 AM",
+        day = "Monday",
+        isCompleted = false
+    )
+    StudyPlannerTheme {
+        TimerScreenContent(
+            task = sampleTask,
+            timeLeft = 1500L,
+            totalTime = 1500L,
+            isTimerRunning = true,
+            isFocusMode = true,
+            focusDuration = 25L,
+            breakDuration = 5L,
+            formatTime = { seconds ->
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+                "%02d:%02d".format(minutes, remainingSeconds)
+            },
+            onBack = {},
+            onReset = {},
+            onToggleTimer = {},
+            onFinish = {},
+            onToggleMode = {},
+            onSaveSettings = { _, _ -> }
+        )
     }
 }

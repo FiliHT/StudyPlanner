@@ -35,6 +35,10 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
     var isFocusMode = mutableStateOf(true)
     var focusDurationMinutes = mutableStateOf(25L)
     var breakDurationMinutes = mutableStateOf(5L)
+    
+    // New Settings state
+    var isNotificationsEnabled = mutableStateOf(true)
+    var isDarkMode = mutableStateOf(false)
 
     private var timerJob: Job? = null
 

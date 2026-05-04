@@ -13,6 +13,7 @@ import com.filiht.studyplanner.db.DatabaseHelper
 import com.filiht.studyplanner.db.StudyDataManager
 import com.filiht.studyplanner.model.StudyTask
 import com.filiht.studyplanner.ui.ScheduleScreen
+import com.filiht.studyplanner.ui.SettingsScreen
 import com.filiht.studyplanner.ui.StudyViewModel
 import com.filiht.studyplanner.ui.TimerScreen
 import com.filiht.studyplanner.ui.theme.StudyPlannerTheme
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            StudyPlannerTheme {
+            StudyPlannerTheme(darkTheme = viewModel.isDarkMode.value) {
                 StudyPlannerApp(viewModel = viewModel)
             }
         }
@@ -52,6 +53,9 @@ fun StudyPlannerApp(viewModel: StudyViewModel) {
                         activeTask = task // Store the clicked task
                         navController.navigate("timer")
                     }
+                },
+                onSettingsClick = {
+                    navController.navigate("settings")
                 }
             )
         }
@@ -62,6 +66,14 @@ fun StudyPlannerApp(viewModel: StudyViewModel) {
                 viewModel = viewModel,
                 onBack = { 
                     navController.popBackStack() 
+                }
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
+                viewModel = viewModel,
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

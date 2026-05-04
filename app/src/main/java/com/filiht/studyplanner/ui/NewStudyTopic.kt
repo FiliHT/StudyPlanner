@@ -76,7 +76,7 @@ fun NewStudySessionModal(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D5FEF))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Add Topic", fontWeight = FontWeight.Bold, color = Color.White)
             }
@@ -87,7 +87,7 @@ fun NewStudySessionModal(
             .padding(horizontal = 24.dp),
         properties = DialogProperties(usePlatformDefaultWidth = false),
         shape = RoundedCornerShape(32.dp),
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -98,11 +98,15 @@ fun NewStudySessionModal(
                     text = "New Study Topic",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
 
                 )
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
+                    Icon(
+                        Icons.Default.Close, 
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         },
@@ -111,7 +115,7 @@ fun NewStudySessionModal(
                 Text(
                     "SUBJECT",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
                 LazyRow(
@@ -136,11 +140,11 @@ fun NewStudySessionModal(
                             },
                             shape = RoundedCornerShape(12.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                labelColor = Color.Gray,
-                                selectedContainerColor = Color(0xFFE8EAF6),
-                                selectedLabelColor = Color(0xFF5D5FEF),
-                                iconColor = Color.Gray,
-                                selectedTrailingIconColor = Color(0xFF5D5FEF)
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                                iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                selectedTrailingIconColor = MaterialTheme.colorScheme.primary
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled = true,
@@ -161,7 +165,7 @@ fun NewStudySessionModal(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Add Subject",
-                                tint = Color.Gray,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -171,43 +175,43 @@ fun NewStudySessionModal(
                 Text(
                     "TOPIC NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
                 OutlinedTextField(
                     value = topicName,
                     onValueChange = { topicName = it },
-                    placeholder = { Text("e.g. Calculus Basics", color = Color.LightGray) },
+                    placeholder = { Text("e.g. Calculus Basics", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     singleLine = true,
                     textStyle = TextStyle(
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color(0xFF5D5FEF),
-                        unfocusedBorderColor = Color(0xFFF0F0F0),
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color(0xFFF5F5F5)
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface
                     )
                 )
 
                 Text(
                     "START TIME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
-                        .border(1.dp, Color(0xFFF0F0F0), RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
                         .clickable {
                             TimePickerDialog(
                                 context,
@@ -229,12 +233,12 @@ fun NewStudySessionModal(
                         text = timeDisplayStr,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = "Select Time",
-                        tint = Color.Black
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -246,18 +250,20 @@ fun NewStudySessionModal(
     if (showAddSubjectDialog.value) {
         AlertDialog(
             onDismissRequest = { showAddSubjectDialog.value = false },
-            title = { Text("New Subject", color = Color.Black) },
-            containerColor = Color.White,
+            title = { Text("New Subject", color = MaterialTheme.colorScheme.onSurface) },
+            containerColor = MaterialTheme.colorScheme.surface,
             text = {
                 OutlinedTextField(
                     value = newSubjectName.value,
                     onValueChange = { newSubjectName.value = it },
-                   // label = { Text("Subject Name" , color = Color.Black) },
-                    placeholder = { Text("e.g. Maths", color = Color.LightGray) },
+                    placeholder = { Text("e.g. Maths", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        focusedBorderColor = Color(0xFF5D5FEF)),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    ),
                 )
             },
             confirmButton = {
@@ -270,12 +276,12 @@ fun NewStudySessionModal(
                         }
                     }
                 ) {
-                    Text("Add" , color = Color.Black )
+                    Text("Add" , color = MaterialTheme.colorScheme.primary )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddSubjectDialog.value = false }) {
-                    Text("Cancel" , color = Color.Black )
+                    Text("Cancel" , color = MaterialTheme.colorScheme.onSurfaceVariant )
                 }
             }
         )
