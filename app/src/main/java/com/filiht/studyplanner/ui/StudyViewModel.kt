@@ -30,7 +30,10 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
     var timeLeft = mutableStateOf(25 * 60L) // Current time left in seconds
     var totalTime = mutableStateOf(25 * 60L) // Total time for the current mode
     var isTimerRunning = mutableStateOf(false)
+    
+    // Task state
     var activeTask = mutableStateOf<StudyTask?>(null)
+    var pendingTaskId = mutableStateOf<Int?>(null)
     
     var isFocusMode = mutableStateOf(true)
     var focusDurationMinutes = mutableStateOf(25L)
@@ -130,6 +133,17 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
         viewModelScope.launch {
             _tasks.value = dataManager.getTasksByDay(day)
         }
+    }
+
+    fun getTaskById(taskId: Int, callback: (StudyTask?) -> Unit) {
+        viewModelScope.launch {
+            val task = dataManager.getTaskById(taskId)
+            callback(task)
+        }
+    }
+    
+    fun setPendingTaskId(taskId: Int) {
+        pendingTaskId.value = taskId
     }
 
     fun startTimer(task: StudyTask? = null) {

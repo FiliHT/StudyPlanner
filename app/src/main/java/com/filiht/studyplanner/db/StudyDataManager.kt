@@ -3,10 +3,10 @@ package com.filiht.studyplanner.db
 import android.content.ContentValues
 import com.filiht.studyplanner.model.StudyTask
 import com.filiht.studyplanner.model.Subject
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class StudyDataManager(private val dbHelper: DatabaseHelper) {
 
@@ -134,7 +134,45 @@ class StudyDataManager(private val dbHelper: DatabaseHelper) {
         }
         cursor.close()
         db.close()
-        return tasks
+
+        // Sort tasks by time chronologically
+        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        return tasks.sortedBy { task ->
+            try {
+                timeFormat.parse(task.time)?.time ?: 0L
+            } catch (e: Exception) {
+                0L
+            }
+        }
+    }
+
+    fun getTaskById(taskId: Int): StudyTask? {
+        val db = dbHelper.readableDatabase
+        
+        val query = """
+            SELECT t.*, s.${DatabaseHelper.COLUMN_SUBJECT_NAME} 
+            FROM ${DatabaseHelper.TABLE_TASKS} t
+            JOIN ${DatabaseHelper.TABLE_SUBJECTS} s ON t.${DatabaseHelper.COLUMN_SUBJECT_ID} = s.${DatabaseHelper.COLUMN_ID}
+            WHERE t.${DatabaseHelper.COLUMN_ID} = ?
+        """.trimIndent()
+        
+        val cursor = db.rawQuery(query, arrayOf(taskId.toString()))
+        var task: StudyTask? = null
+
+        if (cursor.moveToFirst()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_ID))
+            val subjectId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_SUBJECT_ID))
+            val subjectName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_SUBJECT_NAME))
+            val topic = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TOPIC))
+            val time = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TIME))
+            val taskDay = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DAY))
+            val isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_COMPLETED)) == 1
+            
+            task = StudyTask(id, subjectId, subjectName, topic, time, taskDay, isCompleted)
+        }
+        cursor.close()
+        db.close()
+        return task
     }
 
     fun getCompletionStats(day: String): Pair<Int, Int> {
