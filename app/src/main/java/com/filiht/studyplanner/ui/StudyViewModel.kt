@@ -1,5 +1,8 @@
 package com.filiht.studyplanner.ui
 
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -44,6 +47,9 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
     var isDarkMode = mutableStateOf(false)
 
     private var timerJob: Job? = null
+    
+    // Sound Generator using STREAM_MUSIC for better reliability across devices
+    private val toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
 
     // Completion stats state
     private val _completionStats = mutableStateOf(Pair(0, 0))
@@ -158,9 +164,21 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
         timerJob = viewModelScope.launch {
             while (isTimerRunning.value) {
                 if (timeLeft.value > 0) {
+                    // Countdown sound for the last 5 seconds
+                    if (isFocusMode.value && timeLeft.value <= 5 && isNotificationsEnabled.value) {
+                        Log.d("Timer", "Countdown beep: ${timeLeft.value}")
+                        toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
+                    }
+                    
                     delay(1000L)
                     timeLeft.value -= 1
                 } else {
+                    // Finish sound
+                    if (isNotificationsEnabled.value) {
+                        Log.d("Timer", "Finish sound")
+                        toneGenerator.startTone(ToneGenerator.TONE_PROP_PROMPT, 500)
+                    }
+                    
                     // Timer finished - JUST SWITCH MODES, DON'T AUTO-COMPLETE
                     if (isFocusMode.value) {
                         // Switch to break
@@ -205,6 +223,11 @@ class StudyViewModel(private val dataManager: StudyDataManager) : ViewModel() {
         val minutes = seconds / 60
         val remainingSeconds = seconds % 60
         return "%02d:%02d".format(minutes, remainingSeconds)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        toneGenerator.release()
     }
 
     class Factory(private val dataManager: StudyDataManager) : ViewModelProvider.Factory {
